@@ -1,0 +1,890 @@
+zabbix_export:
+  version: '7.0'
+  template_groups:
+    - uuid: 7df96b18c230490a9a0a9e2307226338
+      name: Templates
+  templates:
+    - uuid: 92af276181b24044b2bce01eb45d60be
+      template: 'Template Huawei AC6000 WLAN Discovery'
+      name: 'Template Huawei AC6000 WLAN Discovery'
+      templates:
+        - name: 'ICMP Ping'
+      groups:
+        - name: Templates
+      items:
+        - uuid: 5dce9cccf4134f34acfa9b6f152ee016
+          name: 'AC System Name'
+          type: SNMP_AGENT
+          snmp_oid: 1.3.6.1.2.1.1.5.0
+          key: sysName
+          delay: '1h'
+          history: 90d
+          value_type: TEXT
+          trends: '0'
+          inventory_link: NAME
+          tags:
+            - tag: Application
+              value: General
+        - uuid: 11fa9a883f1a4a88904e0a262b27309c
+          name: 'AC System Description'
+          type: SNMP_AGENT
+          snmp_oid: 1.3.6.1.2.1.1.1.0
+          key: sysDescr
+          delay: '1h'
+          history: 90d
+          value_type: TEXT
+          trends: '0'
+          inventory_link: OS
+          tags:
+            - tag: Application
+              value: General
+        - uuid: 4201f430b3514a93843cfac260148e8d
+          name: 'AC Object ID'
+          type: SNMP_AGENT
+          snmp_oid: 1.3.6.1.2.1.1.2.0
+          key: sysObjectID
+          delay: '1h'
+          history: 90d
+          value_type: TEXT
+          trends: '0'
+          tags:
+            - tag: Application
+              value: General
+        - uuid: f7d3b2b2516343728b86e4fbe3b035f1
+          name: 'AC Total APs'
+          type: SNMP_AGENT
+          snmp_oid: 1.3.6.1.4.1.2011.6.139.12.1.5.7.0
+          key: hwWlanApCount
+          delay: '60'
+          history: 90d
+          trends: 365d
+          description: 'Total number of APs known by the controller.'
+          tags:
+            - tag: Application
+              value: General
+        - uuid: 5e382f83a66e4980b6fa2c84aabeffdf
+          name: 'AC Joined APs'
+          type: SNMP_AGENT
+          snmp_oid: 1.3.6.1.4.1.2011.6.139.12.1.2.1.0
+          key: hwWlanCurJointApNum
+          delay: '60'
+          history: 90d
+          trends: 365d
+          description: 'Number of APs currently connected to the AC.'
+          tags:
+            - tag: Application
+              value: General
+        - uuid: c6a5a18a22424a6bb13f6614fb840467
+          name: 'AC Associated Clients'
+          type: SNMP_AGENT
+          snmp_oid: 1.3.6.1.4.1.2011.6.139.12.1.2.2.0
+          key: hwWlanCurAssocStaNum
+          delay: '60'
+          history: 90d
+          trends: 365d
+          description: 'Number of associated wireless clients on the AC.'
+          tags:
+            - tag: Application
+              value: General
+        - uuid: 600aa2d2c46f413bbfc35eb719d22c26
+          name: 'AC Uptime'
+          type: SNMP_AGENT
+          snmp_oid: 1.3.6.1.2.1.1.3.0
+          key: sysUpTimeInstance
+          delay: '60'
+          history: 90d
+          trends: 365d
+          units: uptime
+          preprocessing:
+            - type: MULTIPLIER
+              parameters:
+                - '0.01'
+          tags:
+            - tag: Application
+              value: General
+      discovery_rules:
+        - uuid: 9d1e36a1f9e8447db94904dbc465e6fa
+          name: 'Huawei WLAN AP discovery'
+          type: SNMP_AGENT
+          snmp_oid: 'discovery[{#APMAC},1.3.6.1.4.1.2011.6.139.13.3.10.1.2,{#APNAME},1.3.6.1.4.1.2011.6.139.13.3.10.1.5,{#APTYPE},1.3.6.1.4.1.2011.6.139.13.3.10.1.4,{#APGROUP},1.3.6.1.4.1.2011.6.139.13.3.10.1.6]'
+          key: hwWlanApDiscovery
+          delay: '1h'
+          lifetime: 14d
+          enabled_lifetime_type: DISABLE_NEVER
+          description: 'Discovers APs from hwWlanIDIndexedApTable using the AP ID index.'
+          item_prototypes:
+            - uuid: a5bdbce3152345ba891dc97c4a95e6e4
+              name: '{#APNAME}: AP state'
+              type: SNMP_AGENT
+              snmp_oid: '1.3.6.1.4.1.2011.6.139.13.3.10.1.7.{#SNMPINDEX}'
+              key: 'hwWlanIDIndexedApRunState[{#SNMPINDEX}]'
+              delay: '60'
+              history: 30d
+              trends: 365d
+              valuemap:
+                name: 'Huawei WLAN AP state'
+              tags:
+                - tag: Application
+                  value: 'AP data'
+                - tag: AP
+                  value: '{#APNAME}'
+              trigger_prototypes:
+                - uuid: 84be1dd69ec1429cb3be7dce1e816157
+                  expression: 'last(/Template Huawei AC6000 WLAN Discovery/hwWlanIDIndexedApRunState[{#SNMPINDEX}])<>8 and last(/Template Huawei AC6000 WLAN Discovery/hwWlanIDIndexedApRunState[{#SNMPINDEX}])<>11'
+                  name: '{#APNAME}: AP state is not normal'
+                  priority: HIGH
+                  description: 'Expected normal(8). standby(11) is tolerated for redundant-controller scenarios.'
+                  manual_close: 'YES'
+                  dependencies:
+                    - name: 'ICMP Ping: Unavailable by ICMP ping'
+                      expression: 'max(/Template Huawei AC6000 WLAN Discovery/icmpping,#3)=0'
+                    - name: '{HOST.NAME}: no SNMP data received from WLC'
+                      expression: 'nodata(/Template Huawei AC6000 WLAN Discovery/sysUpTimeInstance,5m)=1'
+                - uuid: 57763397c45b4600a54a05e48c8c5aa0
+                  expression: 'nodata(/Template Huawei AC6000 WLAN Discovery/hwWlanIDIndexedApRunState[{#SNMPINDEX}],10m)=1'
+                  recovery_mode: RECOVERY_EXPRESSION
+                  recovery_expression: 'nodata(/Template Huawei AC6000 WLAN Discovery/hwWlanIDIndexedApRunState[{#SNMPINDEX}],10m)=0'
+                  name: '{#APNAME}: AP state is missing by SNMP'
+                  priority: HIGH
+                  manual_close: 'YES'
+                  dependencies:
+                    - name: 'ICMP Ping: Unavailable by ICMP ping'
+                      expression: 'max(/Template Huawei AC6000 WLAN Discovery/icmpping,#3)=0'
+                    - name: '{HOST.NAME}: no SNMP data received from WLC'
+                      expression: 'nodata(/Template Huawei AC6000 WLAN Discovery/sysUpTimeInstance,5m)=1'
+            - uuid: d5b77ae34ca64589b7ea3b98f5b0f079
+              name: '{#APNAME}: Online users'
+              type: SNMP_AGENT
+              snmp_oid: '1.3.6.1.4.1.2011.6.139.13.3.10.1.45.{#SNMPINDEX}'
+              key: 'hwWlanIDIndexedApOnlineUserNum[{#SNMPINDEX}]'
+              delay: '60'
+              history: 90d
+              trends: 365d
+              tags:
+                - tag: Application
+                  value: 'AP data'
+                - tag: AP
+                  value: '{#APNAME}'
+            - uuid: 99ab440f74f641188cd1b1e8df8de597
+              name: '{#APNAME}: CPU usage'
+              type: SNMP_AGENT
+              snmp_oid: '1.3.6.1.4.1.2011.6.139.13.3.10.1.42.{#SNMPINDEX}'
+              key: 'hwWlanIDIndexedApCpuUseRate[{#SNMPINDEX}]'
+              delay: '60'
+              history: 30d
+              trends: 365d
+              units: '%'
+              tags:
+                - tag: Application
+                  value: 'AP data'
+                - tag: AP
+                  value: '{#APNAME}'
+              trigger_prototypes:
+                - uuid: 18dc9d7928d74bac9a03f1e50846db3f
+                  expression: 'min(/Template Huawei AC6000 WLAN Discovery/hwWlanIDIndexedApCpuUseRate[{#SNMPINDEX}],5m)>90'
+                  name: '{#APNAME}: AP CPU usage is high'
+                  priority: WARNING
+                  manual_close: 'YES'
+                  dependencies:
+                    - name: '{HOST.NAME}: no SNMP data received from WLC'
+                      expression: 'nodata(/Template Huawei AC6000 WLAN Discovery/sysUpTimeInstance,5m)=1'
+            - uuid: 1a8ab90a2ddb453e9927072daf8fe50b
+              name: '{#APNAME}: Memory usage'
+              type: SNMP_AGENT
+              snmp_oid: '1.3.6.1.4.1.2011.6.139.13.3.10.1.41.{#SNMPINDEX}'
+              key: 'hwWlanIDIndexedApMemoryUseRate[{#SNMPINDEX}]'
+              delay: '60'
+              history: 30d
+              trends: 365d
+              units: '%'
+              tags:
+                - tag: Application
+                  value: 'AP data'
+                - tag: AP
+                  value: '{#APNAME}'
+              trigger_prototypes:
+                - uuid: 4cade8fe6a784c42a3c09a891e417394
+                  expression: 'min(/Template Huawei AC6000 WLAN Discovery/hwWlanIDIndexedApMemoryUseRate[{#SNMPINDEX}],5m)>85'
+                  name: '{#APNAME}: AP memory usage is high'
+                  priority: WARNING
+                  manual_close: 'YES'
+                  dependencies:
+                    - name: '{HOST.NAME}: no SNMP data received from WLC'
+                      expression: 'nodata(/Template Huawei AC6000 WLAN Discovery/sysUpTimeInstance,5m)=1'
+            - uuid: ea2d5c8af3fa4dd4bee7d043f1793459
+              name: '{#APNAME}: Temperature'
+              type: SNMP_AGENT
+              snmp_oid: '1.3.6.1.4.1.2011.6.139.13.3.10.1.44.{#SNMPINDEX}'
+              key: 'hwWlanIDIndexedApTemperature[{#SNMPINDEX}]'
+              delay: '60'
+              history: 30d
+              trends: 365d
+              units: C
+              tags:
+                - tag: Application
+                  value: 'AP data'
+                - tag: AP
+                  value: '{#APNAME}'
+            - uuid: db2732aff5fd40b1a108389ebafe6f36
+              name: '{#APNAME}: Serial number'
+              type: SNMP_AGENT
+              snmp_oid: '1.3.6.1.4.1.2011.6.139.13.3.10.1.3.{#SNMPINDEX}'
+              key: 'hwWlanIDIndexedApSn[{#SNMPINDEX}]'
+              delay: '1h'
+              history: 90d
+              value_type: TEXT
+              trends: '0'
+              tags:
+                - tag: Application
+                  value: 'AP data'
+                - tag: AP
+                  value: '{#APNAME}'
+            - uuid: e7c28602f3ab4ec98bfd71b39ebbbb8a
+              name: '{#APNAME}: Software version'
+              type: SNMP_AGENT
+              snmp_oid: '1.3.6.1.4.1.2011.6.139.13.3.10.1.8.{#SNMPINDEX}'
+              key: 'hwWlanIDIndexedApSoftwareVersion[{#SNMPINDEX}]'
+              delay: '1h'
+              history: 90d
+              value_type: TEXT
+              trends: '0'
+              tags:
+                - tag: Application
+                  value: 'AP data'
+                - tag: AP
+                  value: '{#APNAME}'
+            - uuid: 50541043898c4acd92b0f61b941dad16
+              name: '{#APNAME}: Hardware version'
+              type: SNMP_AGENT
+              snmp_oid: '1.3.6.1.4.1.2011.6.139.13.3.10.1.9.{#SNMPINDEX}'
+              key: 'hwWlanIDIndexedApHardwareVersion[{#SNMPINDEX}]'
+              delay: '1h'
+              history: 90d
+              value_type: TEXT
+              trends: '0'
+              tags:
+                - tag: Application
+                  value: 'AP data'
+                - tag: AP
+                  value: '{#APNAME}'
+          graph_prototypes:
+            - uuid: cd4a15822fd34ecab9b9d37c9abb2bbb
+              name: '{#APNAME}: online users'
+              show_triggers: 'NO'
+              ymin_type_1: FIXED
+              graph_items:
+                - color: 1A7C11
+                  item:
+                    host: 'Template Huawei AC6000 WLAN Discovery'
+                    key: 'hwWlanIDIndexedApOnlineUserNum[{#SNMPINDEX}]'
+            - uuid: b70a22c3bbfa4c3c9b039df87c703aed
+              name: '{#APNAME}: CPU and memory'
+              show_triggers: 'NO'
+              ymin_type_1: FIXED
+              graph_items:
+                - color: C80000
+                  item:
+                    host: 'Template Huawei AC6000 WLAN Discovery'
+                    key: 'hwWlanIDIndexedApCpuUseRate[{#SNMPINDEX}]'
+                - sortorder: '1'
+                  color: 2774A4
+                  item:
+                    host: 'Template Huawei AC6000 WLAN Discovery'
+                    key: 'hwWlanIDIndexedApMemoryUseRate[{#SNMPINDEX}]'
+        - uuid: e166e64f6662411ea6af59e98ca38d74
+          name: 'Huawei WLAN radio discovery'
+          type: SNMP_AGENT
+          snmp_oid: 'discovery[{#APNAME},1.3.6.1.4.1.2011.6.139.16.1.2.1.3,{#BAND},1.3.6.1.4.1.2011.6.139.16.1.2.1.5]'
+          key: hwWlanRadioDiscovery
+          delay: '1h'
+          lifetime: 14d
+          enabled_lifetime_type: DISABLE_NEVER
+          description: 'Discovers AP radios using the radio info table. The index is AP-MAC plus radio-id.'
+          item_prototypes:
+            - uuid: 9cc48ab17fc14e8c9d0879df4c12833c
+              name: '{#APNAME}: radio {#SNMPINDEX} status'
+              type: SNMP_AGENT
+              snmp_oid: '1.3.6.1.4.1.2011.6.139.16.1.2.1.6.{#SNMPINDEX}'
+              key: 'hwWlanRadioRunState[{#SNMPINDEX}]'
+              delay: '60'
+              history: 30d
+              trends: 365d
+              valuemap:
+                name: 'Huawei WLAN radio status'
+              tags:
+                - tag: Application
+                  value: 'Radio data'
+                - tag: AP
+                  value: '{#APNAME}'
+                - tag: Band
+                  value: '{#BAND}'
+              trigger_prototypes:
+                - uuid: 279b6a99506441d5a7448778ff0e429f
+                  expression: 'last(/Template Huawei AC6000 WLAN Discovery/hwWlanRadioRunState[{#SNMPINDEX}])=2'
+                  name: '{#APNAME}: radio {#SNMPINDEX} is down'
+                  priority: WARNING
+                  manual_close: 'YES'
+                  dependencies:
+                    - name: '{HOST.NAME}: no SNMP data received from WLC'
+                      expression: 'nodata(/Template Huawei AC6000 WLAN Discovery/sysUpTimeInstance,5m)=1'
+            - uuid: 1a2ea275c9fb4fe4b31308c29d1ef1c8
+              name: '{#APNAME}: radio {#SNMPINDEX} channel'
+              type: SNMP_AGENT
+              snmp_oid: '1.3.6.1.4.1.2011.6.139.16.1.2.1.7.{#SNMPINDEX}'
+              key: 'hwWlanRadioWorkingChannel[{#SNMPINDEX}]'
+              delay: '5m'
+              history: 90d
+              trends: 365d
+              tags:
+                - tag: Application
+                  value: 'Radio data'
+                - tag: AP
+                  value: '{#APNAME}'
+                - tag: Band
+                  value: '{#BAND}'
+            - uuid: bac0b483366b418580ecbe86c66504eb
+              name: '{#APNAME}: radio {#SNMPINDEX} bandwidth'
+              type: SNMP_AGENT
+              snmp_oid: '1.3.6.1.4.1.2011.6.139.16.1.2.1.10.{#SNMPINDEX}'
+              key: 'hwWlanRadioWorkingChannelBandwidth[{#SNMPINDEX}]'
+              delay: '5m'
+              history: 90d
+              trends: 365d
+              valuemap:
+                name: 'Huawei WLAN radio bandwidth'
+              tags:
+                - tag: Application
+                  value: 'Radio data'
+                - tag: AP
+                  value: '{#APNAME}'
+                - tag: Band
+                  value: '{#BAND}'
+            - uuid: fa31ed3a115245d28825d50d54f05ed3
+              name: '{#APNAME}: radio {#SNMPINDEX} online users'
+              type: SNMP_AGENT
+              snmp_oid: '1.3.6.1.4.1.2011.6.139.16.1.2.1.40.{#SNMPINDEX}'
+              key: 'hwWlanRadioOnlineStaCnt[{#SNMPINDEX}]'
+              delay: '60'
+              history: 90d
+              trends: 365d
+              tags:
+                - tag: Application
+                  value: 'Radio data'
+                - tag: AP
+                  value: '{#APNAME}'
+                - tag: Band
+                  value: '{#BAND}'
+          graph_prototypes:
+            - uuid: f8f50cba332744bf882c036eec08a452
+              name: '{#APNAME}: radio {#SNMPINDEX} users'
+              show_triggers: 'NO'
+              ymin_type_1: FIXED
+              graph_items:
+                - color: 00A0FF
+                  item:
+                    host: 'Template Huawei AC6000 WLAN Discovery'
+                    key: 'hwWlanRadioOnlineStaCnt[{#SNMPINDEX}]'
+        - uuid: 3886a6651eae472d8546441f72af70ce
+          name: 'Huawei WLAN VAP discovery'
+          type: SNMP_AGENT
+          snmp_oid: 'discovery[{#APNAME},1.3.6.1.4.1.2011.6.139.17.1.1.1.7,{#SSID},1.3.6.1.4.1.2011.6.139.17.1.1.1.6,{#ESS},1.3.6.1.4.1.2011.6.139.17.1.1.1.4]'
+          key: hwWlanVapDiscovery
+          delay: '1h'
+          lifetime: 14d
+          enabled_lifetime_type: DISABLE_NEVER
+          description: 'Discovers VAPs so each AP/SSID combination can be monitored.'
+          item_prototypes:
+            - uuid: 1cf5cc4720b44ef8905fffe88b2fca24
+              name: '{#APNAME}: {#SSID} clients'
+              type: SNMP_AGENT
+              snmp_oid: '1.3.6.1.4.1.2011.6.139.17.1.1.1.9.{#SNMPINDEX}'
+              key: 'hwWlanVapStaOnlineCnt[{#SNMPINDEX}]'
+              delay: '60'
+              history: 90d
+              trends: 365d
+              tags:
+                - tag: Application
+                  value: 'SSID data'
+                - tag: AP
+                  value: '{#APNAME}'
+                - tag: SSID
+                  value: '{#SSID}'
+            - uuid: a1f872579a48400eab5465b291032ecf
+              name: '{#APNAME}: {#SSID} status'
+              type: SNMP_AGENT
+              snmp_oid: '1.3.6.1.4.1.2011.6.139.17.1.1.1.10.{#SNMPINDEX}'
+              key: 'hwWlanVapStatus[{#SNMPINDEX}]'
+              delay: '60'
+              history: 30d
+              trends: 365d
+              valuemap:
+                name: 'Huawei WLAN VAP status'
+              tags:
+                - tag: Application
+                  value: 'SSID data'
+                - tag: AP
+                  value: '{#APNAME}'
+                - tag: SSID
+                  value: '{#SSID}'
+              trigger_prototypes:
+                - uuid: a89c9b25eeaa4126bea7cc52643b9451
+                  expression: 'last(/Template Huawei AC6000 WLAN Discovery/hwWlanVapStatus[{#SNMPINDEX}])=2'
+                  name: '{#APNAME}: SSID {#SSID} is down'
+                  priority: WARNING
+                  manual_close: 'YES'
+                  dependencies:
+                    - name: '{HOST.NAME}: no SNMP data received from WLC'
+                      expression: 'nodata(/Template Huawei AC6000 WLAN Discovery/sysUpTimeInstance,5m)=1'
+            - uuid: 6bf7540605a94125bbee17a51bec46c0
+              name: '{#APNAME}: {#SSID} ESS profile'
+              type: SNMP_AGENT
+              snmp_oid: '1.3.6.1.4.1.2011.6.139.17.1.1.1.4.{#SNMPINDEX}'
+              key: 'hwWlanVapProfileName[{#SNMPINDEX}]'
+              delay: '1h'
+              history: 90d
+              value_type: TEXT
+              trends: '0'
+              tags:
+                - tag: Application
+                  value: 'SSID data'
+                - tag: AP
+                  value: '{#APNAME}'
+                - tag: SSID
+                  value: '{#SSID}'
+          graph_prototypes:
+            - uuid: d0664de0963047fd8bb622f6dcad47cf
+              name: '{#APNAME}: {#SSID} clients'
+              show_triggers: 'NO'
+              ymin_type_1: FIXED
+              graph_items:
+                - color: 2774A4
+                  item:
+                    host: 'Template Huawei AC6000 WLAN Discovery'
+                    key: 'hwWlanVapStaOnlineCnt[{#SNMPINDEX}]'
+        - uuid: 70a51b088b8e483189be7aa7d4e3054f
+          name: 'Huawei WLAN client discovery'
+          type: SNMP_AGENT
+          snmp_oid: 'discovery[{#CLIENTMAC},1.3.6.1.4.1.2011.6.139.18.1.2.1.1,{#APNAME},1.3.6.1.4.1.2011.6.139.18.1.2.1.4,{#SSID},1.3.6.1.4.1.2011.6.139.18.1.2.1.18]'
+          key: hwWlanStationDiscovery
+          delay: '10m'
+          lifetime: 2d
+          enabled_lifetime_type: DISABLE_NEVER
+          description: 'Discovers wireless clients from hwWlanStationTable.'
+          item_prototypes:
+            - uuid: 9aaa97fc1bc04053b567ee86ada97941
+              name: '{#CLIENTMAC}: AP name'
+              type: SNMP_AGENT
+              snmp_oid: '1.3.6.1.4.1.2011.6.139.18.1.2.1.4.{#SNMPINDEX}'
+              key: 'hwWlanStaApName[{#SNMPINDEX}]'
+              delay: '60'
+              history: 30d
+              value_type: TEXT
+              trends: '0'
+              tags:
+                - tag: Application
+                  value: 'Clients data'
+                - tag: AP
+                  value: '{#APNAME}'
+                - tag: SSID
+                  value: '{#SSID}'
+            - uuid: ca207055ca59420a85c8b744c826cffe
+              name: '{#CLIENTMAC}: SSID'
+              type: SNMP_AGENT
+              snmp_oid: '1.3.6.1.4.1.2011.6.139.18.1.2.1.18.{#SNMPINDEX}'
+              key: 'hwWlanStaSsid[{#SNMPINDEX}]'
+              delay: '60'
+              history: 30d
+              value_type: TEXT
+              trends: '0'
+              tags:
+                - tag: Application
+                  value: 'Clients data'
+                - tag: AP
+                  value: '{#APNAME}'
+                - tag: SSID
+                  value: '{#SSID}'
+            - uuid: a08913ca49b140e3a2226039db77de84
+              name: '{#CLIENTMAC}: Band'
+              type: SNMP_AGENT
+              snmp_oid: '1.3.6.1.4.1.2011.6.139.18.1.2.1.7.{#SNMPINDEX}'
+              key: 'hwWlanStaAssocBand[{#SNMPINDEX}]'
+              delay: '60'
+              history: 30d
+              trends: 365d
+              valuemap:
+                name: 'Huawei WLAN STA band'
+              tags:
+                - tag: Application
+                  value: 'Clients data'
+                - tag: AP
+                  value: '{#APNAME}'
+                - tag: SSID
+                  value: '{#SSID}'
+            - uuid: a6dfe6f0b8904352b418810573504d69
+              name: '{#CLIENTMAC}: Channel'
+              type: SNMP_AGENT
+              snmp_oid: '1.3.6.1.4.1.2011.6.139.18.1.2.1.9.{#SNMPINDEX}'
+              key: 'hwWlanStaAccessChannel[{#SNMPINDEX}]'
+              delay: '60'
+              history: 30d
+              trends: 365d
+              tags:
+                - tag: Application
+                  value: 'Clients data'
+                - tag: AP
+                  value: '{#APNAME}'
+                - tag: SSID
+                  value: '{#SSID}'
+            - uuid: 5ce1b439c2ae42a3bb76904985d506ae
+              name: '{#CLIENTMAC}: RX rate'
+              type: SNMP_AGENT
+              snmp_oid: '1.3.6.1.4.1.2011.6.139.18.1.2.1.14.{#SNMPINDEX}'
+              key: 'hwWlanStaConnectRxRate[{#SNMPINDEX}]'
+              delay: '60'
+              history: 30d
+              trends: 365d
+              units: Mbps
+              tags:
+                - tag: Application
+                  value: 'Clients data'
+                - tag: AP
+                  value: '{#APNAME}'
+                - tag: SSID
+                  value: '{#SSID}'
+              trigger_prototypes:
+                - uuid: 6b660c9e9b834325ba8088f20b6183e7
+                  expression: 'max(/Template Huawei AC6000 WLAN Discovery/hwWlanStaStatus[{#SNMPINDEX}],10m)=3 and max(/Template Huawei AC6000 WLAN Discovery/hwWlanStaConnectRxRate[{#SNMPINDEX}],10m)<6'
+                  name: '{#CLIENTMAC}: client RX rate is too low on {#APNAME}'
+                  priority: WARNING
+                  manual_close: 'YES'
+                  dependencies:
+                    - name: '{HOST.NAME}: no SNMP data received from WLC'
+                      expression: 'nodata(/Template Huawei AC6000 WLAN Discovery/sysUpTimeInstance,5m)=1'
+            - uuid: 39f032dfe0da4e6d84541269b0271831
+              name: '{#CLIENTMAC}: TX rate'
+              type: SNMP_AGENT
+              snmp_oid: '1.3.6.1.4.1.2011.6.139.18.1.2.1.15.{#SNMPINDEX}'
+              key: 'hwWlanStaConnectTxRate[{#SNMPINDEX}]'
+              delay: '60'
+              history: 30d
+              trends: 365d
+              units: Mbps
+              tags:
+                - tag: Application
+                  value: 'Clients data'
+                - tag: AP
+                  value: '{#APNAME}'
+                - tag: SSID
+                  value: '{#SSID}'
+              trigger_prototypes:
+                - uuid: 077f55996111409d8465dcf5339ed3c8
+                  expression: 'max(/Template Huawei AC6000 WLAN Discovery/hwWlanStaStatus[{#SNMPINDEX}],10m)=3 and max(/Template Huawei AC6000 WLAN Discovery/hwWlanStaConnectTxRate[{#SNMPINDEX}],10m)<6'
+                  name: '{#CLIENTMAC}: client TX rate is too low on {#APNAME}'
+                  priority: WARNING
+                  manual_close: 'YES'
+                  dependencies:
+                    - name: '{HOST.NAME}: no SNMP data received from WLC'
+                      expression: 'nodata(/Template Huawei AC6000 WLAN Discovery/sysUpTimeInstance,5m)=1'
+            - uuid: 0ddddd7d1ef543319075d049b5c48d2d
+              name: '{#CLIENTMAC}: Status'
+              type: SNMP_AGENT
+              snmp_oid: '1.3.6.1.4.1.2011.6.139.18.1.2.1.19.{#SNMPINDEX}'
+              key: 'hwWlanStaStatus[{#SNMPINDEX}]'
+              delay: '60'
+              history: 30d
+              trends: 365d
+              valuemap:
+                name: 'Huawei WLAN STA status'
+              tags:
+                - tag: Application
+                  value: 'Clients data'
+                - tag: AP
+                  value: '{#APNAME}'
+                - tag: SSID
+                  value: '{#SSID}'
+            - uuid: 01e7fa8ada6a4548a5184d13c9776657
+              name: '{#CLIENTMAC}: RX power'
+              type: SNMP_AGENT
+              snmp_oid: '1.3.6.1.4.1.2011.6.139.18.1.2.1.45.{#SNMPINDEX}'
+              key: 'hwWlanStaRxPowerUs[{#SNMPINDEX}]'
+              delay: '60'
+              history: 30d
+              trends: 365d
+              units: dB
+              preprocessing:
+                - type: MULTIPLIER
+                  parameters:
+                    - '0.1'
+              tags:
+                - tag: Application
+                  value: 'Clients data'
+                - tag: AP
+                  value: '{#APNAME}'
+                - tag: SSID
+                  value: '{#SSID}'
+              trigger_prototypes:
+                - uuid: 3b9cde44e1934fb5b3e36314ccbdd34d
+                  expression: 'max(/Template Huawei AC6000 WLAN Discovery/hwWlanStaStatus[{#SNMPINDEX}],10m)=3 and max(/Template Huawei AC6000 WLAN Discovery/hwWlanStaRxPowerUs[{#SNMPINDEX}],10m)<-75'
+                  name: '{#CLIENTMAC}: client RSSI is weak on {#APNAME}'
+                  priority: WARNING
+                  manual_close: 'YES'
+                  dependencies:
+                    - name: '{HOST.NAME}: no SNMP data received from WLC'
+                      expression: 'nodata(/Template Huawei AC6000 WLAN Discovery/sysUpTimeInstance,5m)=1'
+        - uuid: c0a6e62b49324e30b889cc406405094e
+          name: 'Huawei WLAN interfaces data'
+          type: SNMP_AGENT
+          snmp_oid: 'discovery[{#IFNAME},IF-MIB::ifDescr]'
+          key: ifDescr
+          delay: '1h'
+          lifetime: 30d
+          enabled_lifetime_type: DISABLE_NEVER
+          item_prototypes:
+            - uuid: bf786b1284124dc5bee5f9ea462ca4e7
+              name: 'Admin status of interface {#IFNAME}'
+              type: SNMP_AGENT
+              snmp_oid: 'IF-MIB::ifAdminStatus.{#SNMPINDEX}'
+              key: 'ifAdminStatus[{#IFNAME}]'
+              delay: '60'
+              history: 7d
+              valuemap:
+                name: 'SNMP interface status (ifAdminStatus)'
+              tags:
+                - tag: Application
+                  value: General
+            - uuid: 44689c75bcb54910b12ab316706344de
+              name: 'Inbound errors on interface {#IFNAME}'
+              type: SNMP_AGENT
+              snmp_oid: 'IF-MIB::ifInErrors.{#SNMPINDEX}'
+              key: 'ifInErrors[{#IFNAME}]'
+              delay: '60'
+              history: 7d
+              preprocessing:
+                - type: CHANGE_PER_SECOND
+                  parameters:
+                    - ''
+              tags:
+                - tag: Application
+                  value: General
+            - uuid: a9cd2006a38f4f6b97f2649ffcbc2d3e
+              name: 'Incoming traffic on interface {#IFNAME}'
+              type: SNMP_AGENT
+              snmp_oid: 'IF-MIB::ifInOctets.{#SNMPINDEX}'
+              key: 'ifInOctets[{#IFNAME}]'
+              delay: '60'
+              history: 7d
+              units: bps
+              preprocessing:
+                - type: CHANGE_PER_SECOND
+                  parameters:
+                    - ''
+                - type: MULTIPLIER
+                  parameters:
+                    - '8'
+              tags:
+                - tag: Application
+                  value: General
+            - uuid: cc1f7a2dee714522aa4b738a831dbe01
+              name: 'Operational status of interface {#IFNAME}'
+              type: SNMP_AGENT
+              snmp_oid: 'IF-MIB::ifOperStatus.{#SNMPINDEX}'
+              key: 'ifOperStatus[{#IFNAME}]'
+              delay: '60'
+              history: 7d
+              valuemap:
+                name: 'SNMP interface status (ifOperStatus)'
+              tags:
+                - tag: Application
+                  value: General
+              trigger_prototypes:
+                - uuid: 9b48a82636794c50b89ba20cfbbd0a81
+                  expression: '(last(/Template Huawei AC6000 WLAN Discovery/ifOperStatus[{#IFNAME}],#1)<>last(/Template Huawei AC6000 WLAN Discovery/ifOperStatus[{#IFNAME}],#2))=1'
+                  name: 'Operational status changed on {HOST.NAME} interface {#IFNAME}'
+                  priority: WARNING
+                  dependencies:
+                    - name: '{HOST.NAME}: no SNMP data received from WLC'
+                      expression: 'nodata(/Template Huawei AC6000 WLAN Discovery/sysUpTimeInstance,5m)=1'
+            - uuid: aaeffc24cf5e4f93a9b38a0735c53c47
+              name: 'Outbound errors on interface {#IFNAME}'
+              type: SNMP_AGENT
+              snmp_oid: 'IF-MIB::ifOutErrors.{#SNMPINDEX}'
+              key: 'ifOutErrors[{#IFNAME}]'
+              delay: '60'
+              history: 7d
+              preprocessing:
+                - type: CHANGE_PER_SECOND
+                  parameters:
+                    - ''
+              tags:
+                - tag: Application
+                  value: General
+            - uuid: 26649256b1ed4c8c8fa0957b5ce5f5b1
+              name: 'Outgoing traffic on interface {#IFNAME}'
+              type: SNMP_AGENT
+              snmp_oid: 'IF-MIB::ifOutOctets.{#SNMPINDEX}'
+              key: 'ifOutOctets[{#IFNAME}]'
+              delay: '60'
+              history: 7d
+              units: bps
+              preprocessing:
+                - type: CHANGE_PER_SECOND
+                  parameters:
+                    - ''
+                - type: MULTIPLIER
+                  parameters:
+                    - '8'
+              tags:
+                - tag: Application
+                  value: General
+          graph_prototypes:
+            - uuid: 41a4ab9c9db24efa8fb2b8d020e6d192
+              name: 'Traffic on interface {#IFNAME}'
+              graph_items:
+                - drawtype: GRADIENT_LINE
+                  color: 00AA00
+                  item:
+                    host: 'Template Huawei AC6000 WLAN Discovery'
+                    key: 'ifInOctets[{#IFNAME}]'
+                - sortorder: '1'
+                  drawtype: GRADIENT_LINE
+                  color: 3333FF
+                  item:
+                    host: 'Template Huawei AC6000 WLAN Discovery'
+                    key: 'ifOutOctets[{#IFNAME}]'
+      valuemaps:
+        - uuid: da2e3fd5db8c4ed7bf7b9eb0743bff21
+          name: 'Huawei WLAN AP state'
+          mappings:
+            - value: '1'
+              newvalue: idle
+            - value: '2'
+              newvalue: autofind
+            - value: '3'
+              newvalue: typeNotMatch
+            - value: '4'
+              newvalue: fault
+            - value: '5'
+              newvalue: config
+            - value: '6'
+              newvalue: configFailed
+            - value: '7'
+              newvalue: download
+            - value: '8'
+              newvalue: normal
+            - value: '9'
+              newvalue: committing
+            - value: '10'
+              newvalue: commitFailed
+            - value: '11'
+              newvalue: standby
+            - value: '12'
+              newvalue: verMismatch
+            - value: '13'
+              newvalue: nameConflicted
+            - value: '14'
+              newvalue: invalid
+            - value: '15'
+              newvalue: countryCodeMismatch
+        - uuid: afd4b2c213cb485b809ee84a94b42adc
+          name: 'Huawei WLAN VAP status'
+          mappings:
+            - value: '1'
+              newvalue: up
+            - value: '2'
+              newvalue: down
+            - value: '255'
+              newvalue: invalid
+        - uuid: bc745b32c819481abe9deea54df4e281
+          name: 'Huawei WLAN radio status'
+          mappings:
+            - value: '1'
+              newvalue: up
+            - value: '2'
+              newvalue: down
+            - value: '255'
+              newvalue: invalid
+        - uuid: 101de4c3177c4a4eb3cb239c725b782b
+          name: 'Huawei WLAN radio band'
+          mappings:
+            - value: '1'
+              newvalue: 2.4G
+            - value: '2'
+              newvalue: 5G
+            - value: '3'
+              newvalue: 6G
+        - uuid: 8263d53883ab481db5cc27e17b42b251
+          name: 'Huawei WLAN radio bandwidth'
+          mappings:
+            - value: '1'
+              newvalue: ht20
+            - value: '2'
+              newvalue: ht40Plus
+            - value: '3'
+              newvalue: ht40Minus
+            - value: '4'
+              newvalue: ht80
+            - value: '5'
+              newvalue: ht160
+            - value: '255'
+              newvalue: unknown
+        - uuid: 2464a3d75aaf4767855c935876a838c3
+          name: 'Huawei WLAN STA band'
+          mappings:
+            - value: '1'
+              newvalue: 2.4G
+            - value: '2'
+              newvalue: 5G
+            - value: '3'
+              newvalue: 6G
+        - uuid: a91f2e94479e4a899a1cd1a105af11d4
+          name: 'Huawei WLAN STA status'
+          mappings:
+            - value: '1'
+              newvalue: age
+            - value: '2'
+              newvalue: associatedNotAuthenticated
+            - value: '3'
+              newvalue: associatedAndAuthenticated
+            - value: '4'
+              newvalue: roam
+            - value: '5'
+              newvalue: backup
+        - uuid: 6f52a453709d4850a16ab1ebe25ca424
+          name: 'SNMP interface status (ifAdminStatus)'
+          mappings:
+            - value: '1'
+              newvalue: up
+            - value: '2'
+              newvalue: down
+            - value: '3'
+              newvalue: testing
+        - uuid: bf7e0fc6764b4e80ac0cd4673edade09
+          name: 'SNMP interface status (ifOperStatus)'
+          mappings:
+            - value: '1'
+              newvalue: up
+            - value: '2'
+              newvalue: down
+            - value: '3'
+              newvalue: testing
+            - value: '4'
+              newvalue: unknown
+            - value: '5'
+              newvalue: dormant
+            - value: '6'
+              newvalue: notPresent
+            - value: '7'
+              newvalue: lowerLayerDown
+  triggers:
+    - uuid: 6b660c9e9b834325ba8088f20b6183e8
+      expression: 'nodata(/Template Huawei AC6000 WLAN Discovery/sysUpTimeInstance,5m)=1'
+      name: '{HOST.NAME}: no SNMP data received from WLC'
+      priority: HIGH
+      manual_close: 'YES'
+    - uuid: 552967a80cc34a02a5c7133681c9879a
+      expression: 'last(/Template Huawei AC6000 WLAN Discovery/hwWlanApCount)>0 and last(/Template Huawei AC6000 WLAN Discovery/hwWlanCurJointApNum)=0'
+      name: '{HOST.NAME}: no AP is currently joined to the AC'
+      priority: HIGH
+      dependencies:
+        - name: '{HOST.NAME}: no SNMP data received from WLC'
+          expression: 'nodata(/Template Huawei AC6000 WLAN Discovery/sysUpTimeInstance,5m)=1'
