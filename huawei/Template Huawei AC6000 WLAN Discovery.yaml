@@ -699,11 +699,11 @@ zabbix_export:
               history: 30d
               value_type: FLOAT
               trends: 365d
-              units: dB
+              units: dBm
               preprocessing:
                 - type: MULTIPLIER
                   parameters:
-                    - '0.1'
+                    - '0.01'
               tags:
                 - tag: Application
                   value: 'Clients data'
@@ -715,7 +715,8 @@ zabbix_export:
                 - uuid: 3b9cde44e1934fb5b3e36314ccbdd34d
                   expression: 'max(/Template Huawei AC6000 WLAN Discovery/hwWlanStaStatus[{#SNMPINDEX}],10m)=3 and max(/Template Huawei AC6000 WLAN Discovery/hwWlanStaRxPowerUs[{#SNMPINDEX}],10m)<-75'
                   name: '{#APNAME}: client {#CLIENTMAC} RSSI is weak [{#SSID}]'
-                  priority: WARNING
+                  status: DISABLED
+                  priority: INFO
                   manual_close: 'YES'
                   dependencies:
                     - name: '{HOST.NAME}: no SNMP data received from WLC'

@@ -103,4 +103,6 @@ This makes it suitable for operations teams that want one template to cover both
 
 - **Improved Client Monitoring**: Added MAC address formatting and included `{#CLIENTMAC}` in item and trigger names for easier identification.
 - **Polling Optimization**: Adjusted default polling intervals (from 1m to 3m/5m) for non-critical items to reduce SNMP load on the controller.
+- **Client RSSI Fix**: Corrected RSSI units to `dBm` and adjusted the multiplier to `0.01` for accurate reporting.
+- **Trigger Adjustments**: Set the "Weak RSSI" trigger to `INFO` priority and disabled it by default to reduce noise.
 
