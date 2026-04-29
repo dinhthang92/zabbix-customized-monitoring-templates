@@ -55,7 +55,7 @@ zabbix_export:
           type: SNMP_AGENT
           snmp_oid: 1.3.6.1.4.1.2011.6.139.12.1.5.7.0
           key: hwWlanApCount
-          delay: '60'
+          delay: '3m'
           history: 90d
           trends: 365d
           description: 'Total number of APs known by the controller.'
@@ -67,7 +67,7 @@ zabbix_export:
           type: SNMP_AGENT
           snmp_oid: 1.3.6.1.4.1.2011.6.139.12.1.2.1.0
           key: hwWlanCurJointApNum
-          delay: '60'
+          delay: '3m'
           history: 90d
           trends: 365d
           description: 'Number of APs currently connected to the AC.'
@@ -79,7 +79,7 @@ zabbix_export:
           type: SNMP_AGENT
           snmp_oid: 1.3.6.1.4.1.2011.6.139.12.1.2.2.0
           key: hwWlanCurAssocStaNum
-          delay: '60'
+          delay: '3m'
           history: 90d
           trends: 365d
           description: 'Number of associated wireless clients on the AC.'
@@ -91,7 +91,7 @@ zabbix_export:
           type: SNMP_AGENT
           snmp_oid: 1.3.6.1.2.1.1.3.0
           key: sysUpTimeInstance
-          delay: '60'
+          delay: '3m'
           history: 90d
           trends: 365d
           units: uptime
@@ -118,7 +118,7 @@ zabbix_export:
               type: SNMP_AGENT
               snmp_oid: '1.3.6.1.4.1.2011.6.139.13.3.10.1.7.{#SNMPINDEX}'
               key: 'hwWlanIDIndexedApRunState[{#SNMPINDEX}]'
-              delay: '60'
+              delay: '3m'
               history: 30d
               trends: 365d
               valuemap:
@@ -141,9 +141,9 @@ zabbix_export:
                     - name: '{HOST.NAME}: no SNMP data received from WLC'
                       expression: 'nodata(/Template Huawei AC6000 WLAN Discovery/sysUpTimeInstance,5m)=1'
                 - uuid: 57763397c45b4600a54a05e48c8c5aa0
-                  expression: 'nodata(/Template Huawei AC6000 WLAN Discovery/hwWlanIDIndexedApRunState[{#SNMPINDEX}],10m)=1'
+                  expression: 'nodata(/Template Huawei AC6000 WLAN Discovery/hwWlanIDIndexedApRunState[{#SNMPINDEX}],20m)=1'
                   recovery_mode: RECOVERY_EXPRESSION
-                  recovery_expression: 'nodata(/Template Huawei AC6000 WLAN Discovery/hwWlanIDIndexedApRunState[{#SNMPINDEX}],10m)=0'
+                  recovery_expression: 'nodata(/Template Huawei AC6000 WLAN Discovery/hwWlanIDIndexedApRunState[{#SNMPINDEX}],20m)=0'
                   name: '{#APNAME}: AP state is missing by SNMP'
                   priority: HIGH
                   manual_close: 'YES'
@@ -157,7 +157,7 @@ zabbix_export:
               type: SNMP_AGENT
               snmp_oid: '1.3.6.1.4.1.2011.6.139.13.3.10.1.45.{#SNMPINDEX}'
               key: 'hwWlanIDIndexedApOnlineUserNum[{#SNMPINDEX}]'
-              delay: '60'
+              delay: '3m'
               history: 90d
               trends: 365d
               tags:
@@ -170,7 +170,7 @@ zabbix_export:
               type: SNMP_AGENT
               snmp_oid: '1.3.6.1.4.1.2011.6.139.13.3.10.1.42.{#SNMPINDEX}'
               key: 'hwWlanIDIndexedApCpuUseRate[{#SNMPINDEX}]'
-              delay: '60'
+              delay: '3m'
               history: 30d
               trends: 365d
               units: '%'
@@ -193,7 +193,7 @@ zabbix_export:
               type: SNMP_AGENT
               snmp_oid: '1.3.6.1.4.1.2011.6.139.13.3.10.1.41.{#SNMPINDEX}'
               key: 'hwWlanIDIndexedApMemoryUseRate[{#SNMPINDEX}]'
-              delay: '60'
+              delay: '3m'
               history: 30d
               trends: 365d
               units: '%'
@@ -216,7 +216,7 @@ zabbix_export:
               type: SNMP_AGENT
               snmp_oid: '1.3.6.1.4.1.2011.6.139.13.3.10.1.44.{#SNMPINDEX}'
               key: 'hwWlanIDIndexedApTemperature[{#SNMPINDEX}]'
-              delay: '60'
+              delay: '3m'
               history: 30d
               trends: 365d
               units: C
@@ -306,7 +306,7 @@ zabbix_export:
               type: SNMP_AGENT
               snmp_oid: '1.3.6.1.4.1.2011.6.139.16.1.2.1.6.{#SNMPINDEX}'
               key: 'hwWlanRadioRunState[{#SNMPINDEX}]'
-              delay: '60'
+              delay: '3m'
               history: 30d
               trends: 365d
               valuemap:
@@ -332,7 +332,7 @@ zabbix_export:
               type: SNMP_AGENT
               snmp_oid: '1.3.6.1.4.1.2011.6.139.16.1.2.1.7.{#SNMPINDEX}'
               key: 'hwWlanRadioWorkingChannel[{#SNMPINDEX}]'
-              delay: '5m'
+              delay: '3m'
               history: 90d
               trends: 365d
               tags:
@@ -347,7 +347,7 @@ zabbix_export:
               type: SNMP_AGENT
               snmp_oid: '1.3.6.1.4.1.2011.6.139.16.1.2.1.10.{#SNMPINDEX}'
               key: 'hwWlanRadioWorkingChannelBandwidth[{#SNMPINDEX}]'
-              delay: '5m'
+              delay: '3m'
               history: 90d
               trends: 365d
               valuemap:
@@ -364,7 +364,7 @@ zabbix_export:
               type: SNMP_AGENT
               snmp_oid: '1.3.6.1.4.1.2011.6.139.16.1.2.1.40.{#SNMPINDEX}'
               key: 'hwWlanRadioOnlineStaCnt[{#SNMPINDEX}]'
-              delay: '60'
+              delay: '3m'
               history: 90d
               trends: 365d
               tags:
@@ -399,7 +399,7 @@ zabbix_export:
               type: SNMP_AGENT
               snmp_oid: '1.3.6.1.4.1.2011.6.139.17.1.1.1.9.{#SNMPINDEX}'
               key: 'hwWlanVapStaOnlineCnt[{#SNMPINDEX}]'
-              delay: '60'
+              delay: '3m'
               history: 90d
               trends: 365d
               tags:
@@ -414,7 +414,7 @@ zabbix_export:
               type: SNMP_AGENT
               snmp_oid: '1.3.6.1.4.1.2011.6.139.17.1.1.1.10.{#SNMPINDEX}'
               key: 'hwWlanVapStatus[{#SNMPINDEX}]'
-              delay: '60'
+              delay: '3m'
               history: 30d
               trends: 365d
               valuemap:
@@ -464,19 +464,107 @@ zabbix_export:
         - uuid: 70a51b088b8e483189be7aa7d4e3054f
           name: 'Huawei WLAN client discovery'
           type: SNMP_AGENT
-          snmp_oid: 'discovery[{#CLIENTMAC},1.3.6.1.4.1.2011.6.139.18.1.2.1.1,{#APNAME},1.3.6.1.4.1.2011.6.139.18.1.2.1.4,{#SSID},1.3.6.1.4.1.2011.6.139.18.1.2.1.18]'
+          snmp_oid: 'discovery[{#APNAME},1.3.6.1.4.1.2011.6.139.18.1.2.1.4,{#SSID},1.3.6.1.4.1.2011.6.139.18.1.2.1.18]'
           key: hwWlanStationDiscovery
-          delay: '10m'
+          delay: '3m'
           lifetime: 2d
           enabled_lifetime_type: DISABLE_NEVER
           description: 'Discovers wireless clients from hwWlanStationTable.'
+          preprocessing:
+            - type: JAVASCRIPT
+              parameters:
+                - |
+                  try {
+                    var data = JSON.parse(value);
+                  }
+                  catch (error) {
+                    throw 'Failed to parse JSON of Huawei WLAN client discovery.';
+                  }
+
+                  function formatMac(raw) {
+                    if (raw === null || raw === undefined) {
+                      return '';
+                    }
+
+                    raw = String(raw).trim().toLowerCase();
+                    if (!raw) {
+                      return '';
+                    }
+
+                    if (raw.indexOf(':') !== -1) {
+                      return raw.split(':').map(function (part) {
+                        return part.length === 1 ? '0' + part : part;
+                      }).join(':');
+                    }
+
+                    if (raw.indexOf('.') !== -1) {
+                      return raw.split('.').map(function (part) {
+                        var octet = parseInt(part, 10);
+                        if (isNaN(octet) || octet < 0 || octet > 255) {
+                          return '00';
+                        }
+                        var hex = octet.toString(16);
+                        return hex.length === 1 ? '0' + hex : hex;
+                      }).join(':');
+                    }
+
+                    if (/^[0-9a-f]{12}$/.test(raw)) {
+                      return raw.match(/../g).join(':');
+                    }
+
+                    return raw;
+                  }
+
+                  function macFromIndex(index) {
+                    var parts = String(index || '').split('.').map(function (part) {
+                      return parseInt(part, 10);
+                    }).filter(function (part) {
+                      return !isNaN(part) && part >= 0 && part <= 255;
+                    });
+
+                    if (parts.length < 6) {
+                      return '';
+                    }
+
+                    return parts.slice(parts.length - 6).map(function (octet) {
+                      var hex = octet.toString(16);
+                      return hex.length === 1 ? '0' + hex : hex;
+                    }).join(':');
+                  }
+
+                  data.forEach(function (element) {
+                    element['{#CLIENTMAC}'] = formatMac(element['{#CLIENTMAC}']) || macFromIndex(element['{#SNMPINDEX}']);
+                  });
+
+                  return JSON.stringify(data);
           item_prototypes:
+            - uuid: 2e7d180f0ca349f0b16fd3f9608cde8a
+              name: 'Client [{#CLIENTMAC}] on {#APNAME}: MAC'
+              type: DEPENDENT
+              key: 'hwWlanStaMac[{#SNMPINDEX}]'
+              history: 30d
+              value_type: TEXT
+              trends: '0'
+              master_item:
+                key: 'hwWlanStaApName[{#SNMPINDEX}]'
+              preprocessing:
+                - type: JAVASCRIPT
+                  parameters:
+                    - |
+                      return '{#CLIENTMAC}';
+              tags:
+                - tag: Application
+                  value: 'Clients data'
+                - tag: AP
+                  value: '{#APNAME}'
+                - tag: SSID
+                  value: '{#SSID}'
             - uuid: 9aaa97fc1bc04053b567ee86ada97941
-              name: '{#CLIENTMAC}: AP name'
+              name: 'Client [{#CLIENTMAC}] on {#APNAME}: AP name'
               type: SNMP_AGENT
               snmp_oid: '1.3.6.1.4.1.2011.6.139.18.1.2.1.4.{#SNMPINDEX}'
               key: 'hwWlanStaApName[{#SNMPINDEX}]'
-              delay: '60'
+              delay: '3m'
               history: 30d
               value_type: TEXT
               trends: '0'
@@ -488,11 +576,11 @@ zabbix_export:
                 - tag: SSID
                   value: '{#SSID}'
             - uuid: ca207055ca59420a85c8b744c826cffe
-              name: '{#CLIENTMAC}: SSID'
+              name: 'Client [{#CLIENTMAC}] on {#APNAME}: SSID'
               type: SNMP_AGENT
               snmp_oid: '1.3.6.1.4.1.2011.6.139.18.1.2.1.18.{#SNMPINDEX}'
               key: 'hwWlanStaSsid[{#SNMPINDEX}]'
-              delay: '60'
+              delay: '3m'
               history: 30d
               value_type: TEXT
               trends: '0'
@@ -504,11 +592,11 @@ zabbix_export:
                 - tag: SSID
                   value: '{#SSID}'
             - uuid: a08913ca49b140e3a2226039db77de84
-              name: '{#CLIENTMAC}: Band'
+              name: 'Client [{#CLIENTMAC}] on {#APNAME}: Band'
               type: SNMP_AGENT
               snmp_oid: '1.3.6.1.4.1.2011.6.139.18.1.2.1.7.{#SNMPINDEX}'
               key: 'hwWlanStaAssocBand[{#SNMPINDEX}]'
-              delay: '60'
+              delay: '3m'
               history: 30d
               trends: 365d
               valuemap:
@@ -521,11 +609,11 @@ zabbix_export:
                 - tag: SSID
                   value: '{#SSID}'
             - uuid: a6dfe6f0b8904352b418810573504d69
-              name: '{#CLIENTMAC}: Channel'
+              name: 'Client [{#CLIENTMAC}] on {#APNAME}: Channel'
               type: SNMP_AGENT
               snmp_oid: '1.3.6.1.4.1.2011.6.139.18.1.2.1.9.{#SNMPINDEX}'
               key: 'hwWlanStaAccessChannel[{#SNMPINDEX}]'
-              delay: '60'
+              delay: '3m'
               history: 30d
               trends: 365d
               tags:
@@ -536,11 +624,11 @@ zabbix_export:
                 - tag: SSID
                   value: '{#SSID}'
             - uuid: 5ce1b439c2ae42a3bb76904985d506ae
-              name: '{#CLIENTMAC}: RX rate'
+              name: 'Client [{#CLIENTMAC}] on {#APNAME}: RX rate'
               type: SNMP_AGENT
               snmp_oid: '1.3.6.1.4.1.2011.6.139.18.1.2.1.14.{#SNMPINDEX}'
               key: 'hwWlanStaConnectRxRate[{#SNMPINDEX}]'
-              delay: '60'
+              delay: '3m'
               history: 30d
               trends: 365d
               units: Mbps
@@ -554,18 +642,18 @@ zabbix_export:
               trigger_prototypes:
                 - uuid: 6b660c9e9b834325ba8088f20b6183e7
                   expression: 'max(/Template Huawei AC6000 WLAN Discovery/hwWlanStaStatus[{#SNMPINDEX}],10m)=3 and max(/Template Huawei AC6000 WLAN Discovery/hwWlanStaConnectRxRate[{#SNMPINDEX}],10m)<6'
-                  name: '{#CLIENTMAC}: client RX rate is too low on {#APNAME}'
+                  name: '{#APNAME}: client {#CLIENTMAC} RX rate is too low [{#SSID}]'
                   priority: WARNING
                   manual_close: 'YES'
                   dependencies:
                     - name: '{HOST.NAME}: no SNMP data received from WLC'
                       expression: 'nodata(/Template Huawei AC6000 WLAN Discovery/sysUpTimeInstance,5m)=1'
             - uuid: 39f032dfe0da4e6d84541269b0271831
-              name: '{#CLIENTMAC}: TX rate'
+              name: 'Client [{#CLIENTMAC}] on {#APNAME}: TX rate'
               type: SNMP_AGENT
               snmp_oid: '1.3.6.1.4.1.2011.6.139.18.1.2.1.15.{#SNMPINDEX}'
               key: 'hwWlanStaConnectTxRate[{#SNMPINDEX}]'
-              delay: '60'
+              delay: '3m'
               history: 30d
               trends: 365d
               units: Mbps
@@ -579,18 +667,18 @@ zabbix_export:
               trigger_prototypes:
                 - uuid: 077f55996111409d8465dcf5339ed3c8
                   expression: 'max(/Template Huawei AC6000 WLAN Discovery/hwWlanStaStatus[{#SNMPINDEX}],10m)=3 and max(/Template Huawei AC6000 WLAN Discovery/hwWlanStaConnectTxRate[{#SNMPINDEX}],10m)<6'
-                  name: '{#CLIENTMAC}: client TX rate is too low on {#APNAME}'
+                  name: '{#APNAME}: client {#CLIENTMAC} TX rate is too low [{#SSID}]'
                   priority: WARNING
                   manual_close: 'YES'
                   dependencies:
                     - name: '{HOST.NAME}: no SNMP data received from WLC'
                       expression: 'nodata(/Template Huawei AC6000 WLAN Discovery/sysUpTimeInstance,5m)=1'
             - uuid: 0ddddd7d1ef543319075d049b5c48d2d
-              name: '{#CLIENTMAC}: Status'
+              name: 'Client [{#CLIENTMAC}] on {#APNAME}: Status'
               type: SNMP_AGENT
               snmp_oid: '1.3.6.1.4.1.2011.6.139.18.1.2.1.19.{#SNMPINDEX}'
               key: 'hwWlanStaStatus[{#SNMPINDEX}]'
-              delay: '60'
+              delay: '3m'
               history: 30d
               trends: 365d
               valuemap:
@@ -603,12 +691,13 @@ zabbix_export:
                 - tag: SSID
                   value: '{#SSID}'
             - uuid: 01e7fa8ada6a4548a5184d13c9776657
-              name: '{#CLIENTMAC}: RX power'
+              name: 'Client [{#CLIENTMAC}] on {#APNAME}: RX power'
               type: SNMP_AGENT
               snmp_oid: '1.3.6.1.4.1.2011.6.139.18.1.2.1.45.{#SNMPINDEX}'
               key: 'hwWlanStaRxPowerUs[{#SNMPINDEX}]'
-              delay: '60'
+              delay: '3m'
               history: 30d
+              value_type: FLOAT
               trends: 365d
               units: dB
               preprocessing:
@@ -625,7 +714,7 @@ zabbix_export:
               trigger_prototypes:
                 - uuid: 3b9cde44e1934fb5b3e36314ccbdd34d
                   expression: 'max(/Template Huawei AC6000 WLAN Discovery/hwWlanStaStatus[{#SNMPINDEX}],10m)=3 and max(/Template Huawei AC6000 WLAN Discovery/hwWlanStaRxPowerUs[{#SNMPINDEX}],10m)<-75'
-                  name: '{#CLIENTMAC}: client RSSI is weak on {#APNAME}'
+                  name: '{#APNAME}: client {#CLIENTMAC} RSSI is weak [{#SSID}]'
                   priority: WARNING
                   manual_close: 'YES'
                   dependencies:
@@ -645,7 +734,7 @@ zabbix_export:
               type: SNMP_AGENT
               snmp_oid: 'IF-MIB::ifAdminStatus.{#SNMPINDEX}'
               key: 'ifAdminStatus[{#IFNAME}]'
-              delay: '60'
+              delay: '3m'
               history: 7d
               valuemap:
                 name: 'SNMP interface status (ifAdminStatus)'
@@ -657,7 +746,7 @@ zabbix_export:
               type: SNMP_AGENT
               snmp_oid: 'IF-MIB::ifInErrors.{#SNMPINDEX}'
               key: 'ifInErrors[{#IFNAME}]'
-              delay: '60'
+              delay: '3m'
               history: 7d
               preprocessing:
                 - type: CHANGE_PER_SECOND
@@ -671,7 +760,7 @@ zabbix_export:
               type: SNMP_AGENT
               snmp_oid: 'IF-MIB::ifInOctets.{#SNMPINDEX}'
               key: 'ifInOctets[{#IFNAME}]'
-              delay: '60'
+              delay: '3m'
               history: 7d
               units: bps
               preprocessing:
@@ -689,7 +778,7 @@ zabbix_export:
               type: SNMP_AGENT
               snmp_oid: 'IF-MIB::ifOperStatus.{#SNMPINDEX}'
               key: 'ifOperStatus[{#IFNAME}]'
-              delay: '60'
+              delay: '3m'
               history: 7d
               valuemap:
                 name: 'SNMP interface status (ifOperStatus)'
@@ -709,7 +798,7 @@ zabbix_export:
               type: SNMP_AGENT
               snmp_oid: 'IF-MIB::ifOutErrors.{#SNMPINDEX}'
               key: 'ifOutErrors[{#IFNAME}]'
-              delay: '60'
+              delay: '3m'
               history: 7d
               preprocessing:
                 - type: CHANGE_PER_SECOND
@@ -723,7 +812,7 @@ zabbix_export:
               type: SNMP_AGENT
               snmp_oid: 'IF-MIB::ifOutOctets.{#SNMPINDEX}'
               key: 'ifOutOctets[{#IFNAME}]'
-              delay: '60'
+              delay: '3m'
               history: 7d
               units: bps
               preprocessing:

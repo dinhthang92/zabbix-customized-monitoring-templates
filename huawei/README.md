@@ -15,7 +15,7 @@ It provides low-level discovery for access points, radios, VAPs, wireless client
 - Discovered VAPs per AP/SSID
 - VAP status, client count, and ESS profile
 - Discovered wireless clients
-- Client AP name, SSID, band, channel, RX/TX rates, status, and received power
+- Client MAC address, AP name, SSID, band, channel, RX/TX rates, status, and received power
 - Discovered controller interfaces
 - Interface admin status, operational status, traffic, and error counters
 
@@ -26,7 +26,7 @@ This template uses SNMP LLD to discover:
 - APs from the Huawei WLAN AP table
 - Radios from the Huawei WLAN radio table
 - VAPs from the Huawei WLAN VAP table
-- Wireless clients from the Huawei WLAN station table
+- Wireless clients from the Huawei WLAN station table (with MAC address formatting)
 - Interfaces from `IF-MIB::ifDescr`
 
 Discovered entities are kept for a configurable lifetime so the host remains clean when objects disappear.
@@ -98,3 +98,9 @@ Use this template on Huawei AC6000 wireless controllers to keep track of:
 - Controller interface traffic and errors
 
 This makes it suitable for operations teams that want one template to cover both controller-level and per-device WLAN visibility.
+
+## Recent updates
+
+- **Improved Client Monitoring**: Added MAC address formatting and included `{#CLIENTMAC}` in item and trigger names for easier identification.
+- **Polling Optimization**: Adjusted default polling intervals (from 1m to 3m/5m) for non-critical items to reduce SNMP load on the controller.
+
