@@ -7,10 +7,12 @@ zabbix_export:
     - uuid: 92af276181b24044b2bce01eb45d60be
       template: 'Template Huawei AC6000 WLAN Discovery'
       name: 'Template Huawei AC6000 WLAN Discovery'
-      templates:
-        - name: 'ICMP Ping'
       groups:
         - name: Templates
+      macros:
+        - macro: '{$HUAWEI_WLC_SNMP_NODATA}'
+          value: 10m
+          description: 'No-data window for controller-level SNMP availability. sysUpTimeInstance is polled every 3m over UDP/161, so 10m means roughly 3 missed SNMP checks.'
       items:
         - uuid: 5dce9cccf4134f34acfa9b6f152ee016
           name: 'AC System Name'
@@ -110,7 +112,7 @@ zabbix_export:
           key: hwWlanApDiscovery
           delay: '1h'
           lifetime: 14d
-          enabled_lifetime_type: DISABLE_NEVER
+          enabled_lifetime_type: DISABLE_IMMEDIATELY
           description: 'Discovers APs from hwWlanIDIndexedApTable using the AP ID index.'
           item_prototypes:
             - uuid: a5bdbce3152345ba891dc97c4a95e6e4
@@ -118,7 +120,7 @@ zabbix_export:
               type: SNMP_AGENT
               snmp_oid: '1.3.6.1.4.1.2011.6.139.13.3.10.1.7.{#SNMPINDEX}'
               key: 'hwWlanIDIndexedApRunState[{#SNMPINDEX}]'
-              delay: '3m'
+              delay: '5m'
               history: 30d
               trends: 365d
               valuemap:
@@ -136,22 +138,19 @@ zabbix_export:
                   description: 'Expected normal(8). standby(11) is tolerated for redundant-controller scenarios.'
                   manual_close: 'YES'
                   dependencies:
-                    - name: 'ICMP Ping: Unavailable by ICMP ping'
-                      expression: 'max(/Template Huawei AC6000 WLAN Discovery/icmpping,#3)=0'
                     - name: '{HOST.NAME}: no SNMP data received from WLC'
-                      expression: 'nodata(/Template Huawei AC6000 WLAN Discovery/sysUpTimeInstance,5m)=1'
+                      expression: 'nodata(/Template Huawei AC6000 WLAN Discovery/sysUpTimeInstance,{$HUAWEI_WLC_SNMP_NODATA})=1'
                 - uuid: 57763397c45b4600a54a05e48c8c5aa0
-                  expression: 'nodata(/Template Huawei AC6000 WLAN Discovery/hwWlanIDIndexedApRunState[{#SNMPINDEX}],20m)=1'
+                  expression: 'nodata(/Template Huawei AC6000 WLAN Discovery/hwWlanIDIndexedApRunState[{#SNMPINDEX}],70m)=1'
                   recovery_mode: RECOVERY_EXPRESSION
-                  recovery_expression: 'nodata(/Template Huawei AC6000 WLAN Discovery/hwWlanIDIndexedApRunState[{#SNMPINDEX}],20m)=0'
+                  recovery_expression: 'nodata(/Template Huawei AC6000 WLAN Discovery/hwWlanIDIndexedApRunState[{#SNMPINDEX}],70m)=0'
                   name: '{#APNAME}: AP state is missing by SNMP'
+                  status: DISABLED
                   priority: HIGH
                   manual_close: 'YES'
                   dependencies:
-                    - name: 'ICMP Ping: Unavailable by ICMP ping'
-                      expression: 'max(/Template Huawei AC6000 WLAN Discovery/icmpping,#3)=0'
                     - name: '{HOST.NAME}: no SNMP data received from WLC'
-                      expression: 'nodata(/Template Huawei AC6000 WLAN Discovery/sysUpTimeInstance,5m)=1'
+                      expression: 'nodata(/Template Huawei AC6000 WLAN Discovery/sysUpTimeInstance,{$HUAWEI_WLC_SNMP_NODATA})=1'
             - uuid: d5b77ae34ca64589b7ea3b98f5b0f079
               name: '{#APNAME}: Online users'
               type: SNMP_AGENT
@@ -187,7 +186,7 @@ zabbix_export:
                   manual_close: 'YES'
                   dependencies:
                     - name: '{HOST.NAME}: no SNMP data received from WLC'
-                      expression: 'nodata(/Template Huawei AC6000 WLAN Discovery/sysUpTimeInstance,5m)=1'
+                      expression: 'nodata(/Template Huawei AC6000 WLAN Discovery/sysUpTimeInstance,{$HUAWEI_WLC_SNMP_NODATA})=1'
             - uuid: 1a8ab90a2ddb453e9927072daf8fe50b
               name: '{#APNAME}: Memory usage'
               type: SNMP_AGENT
@@ -210,7 +209,7 @@ zabbix_export:
                   manual_close: 'YES'
                   dependencies:
                     - name: '{HOST.NAME}: no SNMP data received from WLC'
-                      expression: 'nodata(/Template Huawei AC6000 WLAN Discovery/sysUpTimeInstance,5m)=1'
+                      expression: 'nodata(/Template Huawei AC6000 WLAN Discovery/sysUpTimeInstance,{$HUAWEI_WLC_SNMP_NODATA})=1'
             - uuid: ea2d5c8af3fa4dd4bee7d043f1793459
               name: '{#APNAME}: Temperature'
               type: SNMP_AGENT
@@ -326,7 +325,7 @@ zabbix_export:
                   manual_close: 'YES'
                   dependencies:
                     - name: '{HOST.NAME}: no SNMP data received from WLC'
-                      expression: 'nodata(/Template Huawei AC6000 WLAN Discovery/sysUpTimeInstance,5m)=1'
+                      expression: 'nodata(/Template Huawei AC6000 WLAN Discovery/sysUpTimeInstance,{$HUAWEI_WLC_SNMP_NODATA})=1'
             - uuid: 1a2ea275c9fb4fe4b31308c29d1ef1c8
               name: '{#APNAME}: radio {#SNMPINDEX} channel'
               type: SNMP_AGENT
@@ -430,11 +429,12 @@ zabbix_export:
                 - uuid: a89c9b25eeaa4126bea7cc52643b9451
                   expression: 'last(/Template Huawei AC6000 WLAN Discovery/hwWlanVapStatus[{#SNMPINDEX}])=2'
                   name: '{#APNAME}: SSID {#SSID} is down'
+                  status: DISABLED
                   priority: WARNING
                   manual_close: 'YES'
                   dependencies:
                     - name: '{HOST.NAME}: no SNMP data received from WLC'
-                      expression: 'nodata(/Template Huawei AC6000 WLAN Discovery/sysUpTimeInstance,5m)=1'
+                      expression: 'nodata(/Template Huawei AC6000 WLAN Discovery/sysUpTimeInstance,{$HUAWEI_WLC_SNMP_NODATA})=1'
             - uuid: 6bf7540605a94125bbee17a51bec46c0
               name: '{#APNAME}: {#SSID} ESS profile'
               type: SNMP_AGENT
@@ -453,7 +453,7 @@ zabbix_export:
                   value: '{#SSID}'
           graph_prototypes:
             - uuid: d0664de0963047fd8bb622f6dcad47cf
-              name: '{#APNAME}: {#SSID} clients'
+              name: '{#APNAME}: {#SSID} clients [{#SNMPINDEX}]'
               show_triggers: 'NO'
               ymin_type_1: FIXED
               graph_items:
@@ -461,11 +461,152 @@ zabbix_export:
                   item:
                     host: 'Template Huawei AC6000 WLAN Discovery'
                     key: 'hwWlanVapStaOnlineCnt[{#SNMPINDEX}]'
+        - uuid: eb89f2481dca472aa10ff64dee0a06af
+          name: 'Huawei WLAN SSID statistics discovery'
+          type: SNMP_AGENT
+          snmp_oid: 'discovery[{#CLIENTS2G},1.3.6.1.4.1.2011.6.139.17.1.2.1.2,{#CLIENTS5G},1.3.6.1.4.1.2011.6.139.17.1.2.1.3,{#APCOUNT},1.3.6.1.4.1.2011.6.139.17.1.2.1.4]'
+          key: hwWlanSsidStatisticsDiscovery
+          delay: '1h'
+          lifetime: 14d
+          enabled_lifetime_type: DISABLE_NEVER
+          description: 'Discovers one row per SSID from hwWlanSsidStatisticTable. The SSID is encoded as an OCTET STRING in the SNMP index.'
+          preprocessing:
+            - type: JAVASCRIPT
+              parameters:
+                - |
+                  try {
+                    var data = JSON.parse(value);
+                  }
+                  catch (error) {
+                    throw 'Failed to parse JSON of Huawei WLAN SSID statistics discovery.';
+                  }
+
+                  function ssidFromIndex(index) {
+                    var parts = String(index || '').split('.').map(function (part) {
+                      return parseInt(part, 10);
+                    });
+                    var length = parts.shift();
+
+                    if (isNaN(length) || length < 1 || parts.length < length) {
+                      return String(index || 'unknown');
+                    }
+
+                    var bytes = parts.slice(0, length);
+                    try {
+                      return decodeURIComponent(bytes.map(function (octet) {
+                        var hex = octet.toString(16);
+                        return '%' + (hex.length === 1 ? '0' + hex : hex);
+                      }).join(''));
+                    }
+                    catch (error) {
+                      return bytes.map(function (octet) {
+                        return String.fromCharCode(octet);
+                      }).join('');
+                    }
+                  }
+
+                  data.forEach(function (element) {
+                    element['{#SSID}'] = ssidFromIndex(element['{#SNMPINDEX}']);
+                  });
+
+                  return JSON.stringify(data);
+          item_prototypes:
+            - uuid: 2aee345ac3944ac98fd8457160448573
+              name: 'SSID {#SSID}: 2.4 GHz clients'
+              type: SNMP_AGENT
+              snmp_oid: '1.3.6.1.4.1.2011.6.139.17.1.2.1.2.{#SNMPINDEX}'
+              key: 'hwWlanSsid2gStaCnt[{#SNMPINDEX}]'
+              delay: '3m'
+              history: 90d
+              trends: 365d
+              tags:
+                - tag: Application
+                  value: 'SSID summary'
+                - tag: SSID
+                  value: '{#SSID}'
+            - uuid: 52a3fe73eb3b4c1b8e1a71d63637b3b6
+              name: 'SSID {#SSID}: 5 GHz clients'
+              type: SNMP_AGENT
+              snmp_oid: '1.3.6.1.4.1.2011.6.139.17.1.2.1.3.{#SNMPINDEX}'
+              key: 'hwWlanSsid5gStaCnt[{#SNMPINDEX}]'
+              delay: '3m'
+              history: 90d
+              trends: 365d
+              tags:
+                - tag: Application
+                  value: 'SSID summary'
+                - tag: SSID
+                  value: '{#SSID}'
+            - uuid: 3758ae549d8c4b658999b5df71b0fd11
+              name: 'SSID {#SSID}: clients total'
+              type: CALCULATED
+              key: 'hwWlanSsidStaCnt[{#SNMPINDEX}]'
+              delay: '3m'
+              history: 90d
+              trends: 365d
+              params: 'last(//hwWlanSsid2gStaCnt[{#SNMPINDEX}])+last(//hwWlanSsid5gStaCnt[{#SNMPINDEX}])'
+              description: 'Total associated clients for this SSID across the controller: 2.4 GHz plus 5 GHz.'
+              tags:
+                - tag: Application
+                  value: 'SSID summary'
+                - tag: SSID
+                  value: '{#SSID}'
+            - uuid: 51342eb51a9846bda018a8aff28ddeee
+              name: 'SSID {#SSID}: service status'
+              type: SNMP_AGENT
+              snmp_oid: '1.3.6.1.4.1.2011.6.139.11.1.20.1.4.{#SNMPINDEX}'
+              key: 'hwWlanSsidServiceSwitch[{#SNMPINDEX}]'
+              delay: '3m'
+              history: 30d
+              trends: 365d
+              description: 'Administrative service status of the VAP profile bound one-to-one to this SSID.'
+              valuemap:
+                name: 'Huawei WLAN service switch'
+              tags:
+                - tag: Application
+                  value: 'SSID summary'
+                - tag: SSID
+                  value: '{#SSID}'
+              trigger_prototypes:
+                - uuid: f7c5bb8733f14bec8b1b367fb1fec0cb
+                  expression: 'count(/Template Huawei AC6000 WLAN Discovery/hwWlanSsidServiceSwitch[{#SNMPINDEX}],#3,"eq","1")=3'
+                  name: 'SSID {#SSID} is disabled'
+                  priority: WARNING
+                  description: 'The SSID service switch has been disabled for three consecutive checks.'
+                  manual_close: 'YES'
+                  dependencies:
+                    - name: '{HOST.NAME}: no SNMP data received from WLC'
+                      expression: 'nodata(/Template Huawei AC6000 WLAN Discovery/sysUpTimeInstance,{$HUAWEI_WLC_SNMP_NODATA})=1'
+            - uuid: c4594a3832434f5a99d7b81bd99844cb
+              name: 'SSID {#SSID}: AP count'
+              type: SNMP_AGENT
+              snmp_oid: '1.3.6.1.4.1.2011.6.139.17.1.2.1.4.{#SNMPINDEX}'
+              key: 'hwWlanSsidApCnt[{#SNMPINDEX}]'
+              delay: '3m'
+              history: 90d
+              trends: 365d
+              description: 'Number of APs broadcasting this SSID.'
+              tags:
+                - tag: Application
+                  value: 'SSID summary'
+                - tag: SSID
+                  value: '{#SSID}'
+          graph_prototypes:
+            - uuid: ea3d0a85063744d5b525d330181b9f84
+              name: 'SSID {#SSID}: clients'
+              show_triggers: 'NO'
+              ymin_type_1: FIXED
+              graph_items:
+                - color: 2774A4
+                  item:
+                    host: 'Template Huawei AC6000 WLAN Discovery'
+                    key: 'hwWlanSsidStaCnt[{#SNMPINDEX}]'
         - uuid: 70a51b088b8e483189be7aa7d4e3054f
           name: 'Huawei WLAN client discovery'
           type: SNMP_AGENT
           snmp_oid: 'discovery[{#APNAME},1.3.6.1.4.1.2011.6.139.18.1.2.1.4,{#SSID},1.3.6.1.4.1.2011.6.139.18.1.2.1.18]'
           key: hwWlanStationDiscovery
+          status: DISABLED
           delay: '3m'
           lifetime: 2d
           enabled_lifetime_type: DISABLE_NEVER
@@ -641,13 +782,13 @@ zabbix_export:
                   value: '{#SSID}'
               trigger_prototypes:
                 - uuid: 6b660c9e9b834325ba8088f20b6183e7
-                  expression: 'max(/Template Huawei AC6000 WLAN Discovery/hwWlanStaStatus[{#SNMPINDEX}],10m)=3 and max(/Template Huawei AC6000 WLAN Discovery/hwWlanStaConnectRxRate[{#SNMPINDEX}],10m)<6'
+                  expression: 'nodata(/Template Huawei AC6000 WLAN Discovery/hwWlanStaConnectRxRate[{#SNMPINDEX}],2h)=0 and max(/Template Huawei AC6000 WLAN Discovery/hwWlanStaStatus[{#SNMPINDEX}],10m)=3 and max(/Template Huawei AC6000 WLAN Discovery/hwWlanStaConnectRxRate[{#SNMPINDEX}],10m)<6'
                   name: '{#APNAME}: client {#CLIENTMAC} RX rate is too low [{#SSID}]'
-                  priority: WARNING
+                  priority: INFO
                   manual_close: 'YES'
                   dependencies:
                     - name: '{HOST.NAME}: no SNMP data received from WLC'
-                      expression: 'nodata(/Template Huawei AC6000 WLAN Discovery/sysUpTimeInstance,5m)=1'
+                      expression: 'nodata(/Template Huawei AC6000 WLAN Discovery/sysUpTimeInstance,{$HUAWEI_WLC_SNMP_NODATA})=1'
             - uuid: 39f032dfe0da4e6d84541269b0271831
               name: 'Client [{#CLIENTMAC}] on {#APNAME}: TX rate'
               type: SNMP_AGENT
@@ -666,13 +807,13 @@ zabbix_export:
                   value: '{#SSID}'
               trigger_prototypes:
                 - uuid: 077f55996111409d8465dcf5339ed3c8
-                  expression: 'max(/Template Huawei AC6000 WLAN Discovery/hwWlanStaStatus[{#SNMPINDEX}],10m)=3 and max(/Template Huawei AC6000 WLAN Discovery/hwWlanStaConnectTxRate[{#SNMPINDEX}],10m)<6'
+                  expression: 'nodata(/Template Huawei AC6000 WLAN Discovery/hwWlanStaConnectTxRate[{#SNMPINDEX}],2h)=0 and max(/Template Huawei AC6000 WLAN Discovery/hwWlanStaStatus[{#SNMPINDEX}],10m)=3 and max(/Template Huawei AC6000 WLAN Discovery/hwWlanStaConnectTxRate[{#SNMPINDEX}],10m)<6'
                   name: '{#APNAME}: client {#CLIENTMAC} TX rate is too low [{#SSID}]'
-                  priority: WARNING
+                  priority: INFO
                   manual_close: 'YES'
                   dependencies:
                     - name: '{HOST.NAME}: no SNMP data received from WLC'
-                      expression: 'nodata(/Template Huawei AC6000 WLAN Discovery/sysUpTimeInstance,5m)=1'
+                      expression: 'nodata(/Template Huawei AC6000 WLAN Discovery/sysUpTimeInstance,{$HUAWEI_WLC_SNMP_NODATA})=1'
             - uuid: 0ddddd7d1ef543319075d049b5c48d2d
               name: 'Client [{#CLIENTMAC}] on {#APNAME}: Status'
               type: SNMP_AGENT
@@ -713,14 +854,14 @@ zabbix_export:
                   value: '{#SSID}'
               trigger_prototypes:
                 - uuid: 3b9cde44e1934fb5b3e36314ccbdd34d
-                  expression: 'max(/Template Huawei AC6000 WLAN Discovery/hwWlanStaStatus[{#SNMPINDEX}],10m)=3 and max(/Template Huawei AC6000 WLAN Discovery/hwWlanStaRxPowerUs[{#SNMPINDEX}],10m)<-75'
+                  expression: 'nodata(/Template Huawei AC6000 WLAN Discovery/hwWlanStaRxPowerUs[{#SNMPINDEX}],2h)=0 and max(/Template Huawei AC6000 WLAN Discovery/hwWlanStaStatus[{#SNMPINDEX}],10m)=3 and max(/Template Huawei AC6000 WLAN Discovery/hwWlanStaRxPowerUs[{#SNMPINDEX}],10m)<-75'
                   name: '{#APNAME}: client {#CLIENTMAC} RSSI is weak [{#SSID}]'
                   status: DISABLED
                   priority: INFO
                   manual_close: 'YES'
                   dependencies:
                     - name: '{HOST.NAME}: no SNMP data received from WLC'
-                      expression: 'nodata(/Template Huawei AC6000 WLAN Discovery/sysUpTimeInstance,5m)=1'
+                      expression: 'nodata(/Template Huawei AC6000 WLAN Discovery/sysUpTimeInstance,{$HUAWEI_WLC_SNMP_NODATA})=1'
         - uuid: c0a6e62b49324e30b889cc406405094e
           name: 'Huawei WLAN interfaces data'
           type: SNMP_AGENT
@@ -793,7 +934,7 @@ zabbix_export:
                   priority: WARNING
                   dependencies:
                     - name: '{HOST.NAME}: no SNMP data received from WLC'
-                      expression: 'nodata(/Template Huawei AC6000 WLAN Discovery/sysUpTimeInstance,5m)=1'
+                      expression: 'nodata(/Template Huawei AC6000 WLAN Discovery/sysUpTimeInstance,{$HUAWEI_WLC_SNMP_NODATA})=1'
             - uuid: aaeffc24cf5e4f93a9b38a0735c53c47
               name: 'Outbound errors on interface {#IFNAME}'
               type: SNMP_AGENT
@@ -884,6 +1025,13 @@ zabbix_export:
               newvalue: down
             - value: '255'
               newvalue: invalid
+        - uuid: 0aaa51251f614dbeab58140ebae85190
+          name: 'Huawei WLAN service switch'
+          mappings:
+            - value: '1'
+              newvalue: disabled
+            - value: '2'
+              newvalue: enabled
         - uuid: bc745b32c819481abe9deea54df4e281
           name: 'Huawei WLAN radio status'
           mappings:
@@ -967,7 +1115,7 @@ zabbix_export:
               newvalue: lowerLayerDown
   triggers:
     - uuid: 6b660c9e9b834325ba8088f20b6183e8
-      expression: 'nodata(/Template Huawei AC6000 WLAN Discovery/sysUpTimeInstance,5m)=1'
+      expression: 'nodata(/Template Huawei AC6000 WLAN Discovery/sysUpTimeInstance,{$HUAWEI_WLC_SNMP_NODATA})=1'
       name: '{HOST.NAME}: no SNMP data received from WLC'
       priority: HIGH
       manual_close: 'YES'
@@ -977,4 +1125,4 @@ zabbix_export:
       priority: HIGH
       dependencies:
         - name: '{HOST.NAME}: no SNMP data received from WLC'
-          expression: 'nodata(/Template Huawei AC6000 WLAN Discovery/sysUpTimeInstance,5m)=1'
+          expression: 'nodata(/Template Huawei AC6000 WLAN Discovery/sysUpTimeInstance,{$HUAWEI_WLC_SNMP_NODATA})=1'
