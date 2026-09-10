@@ -10,6 +10,12 @@ zabbix_export:
       groups:
         - name: Templates
       macros:
+        - macro: '{$HUAWEI_WLC_CPU_WARN}'
+          value: '90'
+          description: 'Maximum sustained CPU utilization for a WLC SRU/MPU processing board.'
+        - macro: '{$HUAWEI_WLC_MEMORY_WARN}'
+          value: '85'
+          description: 'Maximum sustained memory utilization for a WLC SRU/MPU processing board.'
         - macro: '{$HUAWEI_WLC_SNMP_NODATA}'
           value: 10m
           description: 'No-data window for controller-level SNMP availability. sysUpTimeInstance is polled every 3m over UDP/161, so 10m means roughly 3 missed SNMP checks.'
@@ -290,6 +296,83 @@ zabbix_export:
                   item:
                     host: 'Template Huawei AC6000 WLAN Discovery'
                     key: 'hwWlanIDIndexedApMemoryUseRate[{#SNMPINDEX}]'
+        - uuid: 2b24d6c7cde64f3caff0479d32ce0fef
+          name: 'Huawei WLC processing board discovery'
+          type: SNMP_AGENT
+          snmp_oid: 'discovery[{#ENT_NAME},1.3.6.1.2.1.47.1.1.1.1.7]'
+          key: hwWlcProcessingBoardDiscovery
+          delay: '1h'
+          filter:
+            conditions:
+              - macro: '{#ENT_NAME}'
+                value: '^(SRU|MPU).*'
+                formulaid: A
+          lifetime: 14d
+          enabled_lifetime_type: DISABLE_IMMEDIATELY
+          description: 'Discovers WLC processing boards from ENTITY-MIB. The SRU/MPU filter excludes chassis and interface entities that report zero utilization.'
+          item_prototypes:
+            - uuid: 163d2a396cfa433ea84e48e21c42ab85
+              name: 'WLC {#ENT_NAME}: CPU utilization'
+              type: SNMP_AGENT
+              snmp_oid: '1.3.6.1.4.1.2011.5.25.31.1.1.1.1.5.{#SNMPINDEX}'
+              key: 'hwWlcCpuUtilization[{#SNMPINDEX}]'
+              delay: '3m'
+              history: 90d
+              trends: 365d
+              units: '%'
+              description: 'CPU utilization of the Huawei WLC SRU/MPU processing board from HUAWEI-ENTITY-EXTENT-MIB.'
+              tags:
+                - tag: Application
+                  value: 'WLC health'
+                - tag: 'WLC component'
+                  value: '{#ENT_NAME}'
+              trigger_prototypes:
+                - uuid: 5844c838b41443bea199422a03f6c1fe
+                  expression: 'min(/Template Huawei AC6000 WLAN Discovery/hwWlcCpuUtilization[{#SNMPINDEX}],5m)>{$HUAWEI_WLC_CPU_WARN}'
+                  name: 'WLC {#ENT_NAME}: CPU utilization is high'
+                  priority: WARNING
+                  dependencies:
+                    - name: '{HOST.NAME}: no SNMP data received from WLC'
+                      expression: 'nodata(/Template Huawei AC6000 WLAN Discovery/sysUpTimeInstance,{$HUAWEI_WLC_SNMP_NODATA})=1'
+            - uuid: a870ca124353448c8ab8c7c60dfaf326
+              name: 'WLC {#ENT_NAME}: Memory utilization'
+              type: SNMP_AGENT
+              snmp_oid: '1.3.6.1.4.1.2011.5.25.31.1.1.1.1.7.{#SNMPINDEX}'
+              key: 'hwWlcMemoryUtilization[{#SNMPINDEX}]'
+              delay: '3m'
+              history: 90d
+              trends: 365d
+              units: '%'
+              description: 'Memory utilization of the Huawei WLC SRU/MPU processing board from HUAWEI-ENTITY-EXTENT-MIB.'
+              tags:
+                - tag: Application
+                  value: 'WLC health'
+                - tag: 'WLC component'
+                  value: '{#ENT_NAME}'
+              trigger_prototypes:
+                - uuid: 01a353de08e94743b8d25b50d179d618
+                  expression: 'min(/Template Huawei AC6000 WLAN Discovery/hwWlcMemoryUtilization[{#SNMPINDEX}],5m)>{$HUAWEI_WLC_MEMORY_WARN}'
+                  name: 'WLC {#ENT_NAME}: Memory utilization is high'
+                  priority: WARNING
+                  dependencies:
+                    - name: '{HOST.NAME}: no SNMP data received from WLC'
+                      expression: 'nodata(/Template Huawei AC6000 WLAN Discovery/sysUpTimeInstance,{$HUAWEI_WLC_SNMP_NODATA})=1'
+          graph_prototypes:
+            - uuid: c273fc69c6644a5f8aa8a34db4f27f7c
+              name: 'WLC {#ENT_NAME}: CPU and memory utilization'
+              show_triggers: 'NO'
+              ymin_type_1: FIXED
+              ymax_type_1: FIXED
+              graph_items:
+                - color: C80000
+                  item:
+                    host: 'Template Huawei AC6000 WLAN Discovery'
+                    key: 'hwWlcCpuUtilization[{#SNMPINDEX}]'
+                - sortorder: '1'
+                  color: 2774A4
+                  item:
+                    host: 'Template Huawei AC6000 WLAN Discovery'
+                    key: 'hwWlcMemoryUtilization[{#SNMPINDEX}]'
         - uuid: e166e64f6662411ea6af59e98ca38d74
           name: 'Huawei WLAN radio discovery'
           type: SNMP_AGENT
